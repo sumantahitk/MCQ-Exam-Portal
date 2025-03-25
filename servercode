@@ -1,0 +1,105 @@
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+class ClientHandler extends Thread {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+
+    private static final String[][] QUESTION_POOL = {
+        {"What does CPU stand for?", "A) Central Processing Unit", "B) Computer Personal Unit", "C) Central Process Unit", "D) Central Performance Unit", "A"},
+        {"Which data structure follows FIFO?", "A) Stack", "B) Queue", "C) Tree", "D) Graph", "B"},
+        {"What is the time complexity of binary search?", "A) O(n)", "B) O(log n)", "C) O(n log n)", "D) O(1)", "B"},
+        {"Which programming language is platform-independent?", "A) C", "B) Python", "C) Java", "D) Assembly", "C"},
+        {"What is the full form of HTTP?", "A) HyperText Transfer Protocol", "B) HyperText Transmission Process", "C) High Transfer Protocol", "D) Hyper Transfer Text Protocol", "A"},
+        {"What is the primary function of an operating system?", "A) Manage hardware", "B) Create software", "C) Store data", "D) Connect to the internet", "A"},
+        {"Which sorting algorithm has O(n^2) worst case?", "A) Merge Sort", "B) Quick Sort", "C) Bubble Sort", "D) Heap Sort", "C"},
+        {"What is the default port for HTTP?", "A) 21", "B) 80", "C) 443", "D) 8080", "B"},
+        {"Which protocol is used for secure web communication?", "A) HTTP", "B) FTP", "C) SMTP", "D) HTTPS", "D"},
+        {"Which layer of the OSI model handles IP addressing?", "A) Physical", "B) Data Link", "C) Network", "D) Transport", "C"},
+        {"Which of the following is not a programming language?", "A) Python", "B) Java", "C) HTML", "D) C++", "C"},
+        {"What does RAM stand for?", "A) Read Access Memory", "B) Random Access Memory", "C) Read And Modify", "D) Rotational Access Memory", "B"},
+        {"What is used to uniquely identify a process in an OS?", "A) PID", "B) MAC Address", "C) IP Address", "D) Thread ID", "A"},
+        {"What does SQL stand for?", "A) Simple Query Language", "B) Structured Query Language", "C) System Query Language", "D) Sequential Query Language", "B"},
+        {"Which protocol is used for email?", "A) HTTP", "B) IMAP", "C) FTP", "D) SSH", "B"},
+        {"What does DNS do?", "A) Converts IP to MAC", "B) Converts domain names to IP", "C) Encrypts data", "D) Stores passwords", "B"},
+        {"Which programming language is used for AI?", "A) Java", "B) Python", "C) C", "D) Ruby", "B"},
+        {"Which database is NoSQL?", "A) MySQL", "B) PostgreSQL", "C) MongoDB", "D) Oracle", "C"},
+        {"What is the use of an API?", "A) Compiling code", "B) Managing memory", "C) Connecting software components", "D) Running operating systems", "C"},
+        {"Which of the following is a Linux command?", "A) mkdir", "B) dir", "C) cls", "D) copy", "A"}
+    };
+
+    public ClientHandler(Socket socket) {
+        this.socket = socket;
+    }
+
+    public void run() {
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+
+            // Receive Client Name
+            out.println("Enter your name: ");
+            String clientName = in.readLine();
+            System.out.println("Client " + clientName + " connected.");
+
+            // Randomly select 5 unique questions
+            List<String[]> questionList = Arrays.asList(QUESTION_POOL);
+            Collections.shuffle(questionList);
+            List<String[]> selectedQuestions = questionList.subList(0, 5);
+
+            Collections.shuffle(selectedQuestions);
+
+            StringBuilder clientAnswers = new StringBuilder();
+            int score = 0;
+
+            for (String[] q : selectedQuestions) {
+                out.println(q[0]); // Question
+                out.println(q[1]); // Option A
+                out.println(q[2]); // Option B
+                out.println(q[3]); // Option C
+                out.println(q[4]); // Option D
+                out.println("Enter your choice (A/B/C/D): ");
+
+                String answer = in.readLine().toUpperCase();
+                clientAnswers.append(answer).append(" ");
+
+                if (answer.equals(q[5])) {
+                    score++;
+                }
+
+                out.println(q[5]); // Send the correct answer to the client
+            }
+
+            out.println("Exam finished! Your Score: " + score + "/5");
+
+            System.out.println("Client: " + clientName);
+            System.out.println("Questions & Answers: " + clientAnswers);
+            System.out.println("Score: " + score + "/5");
+            System.out.println("----------------------------");
+
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class Exams {
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(12345)) {
+            System.out.println("Server started. Waiting for clients...");
+            
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                new ClientHandler(clientSocket).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
