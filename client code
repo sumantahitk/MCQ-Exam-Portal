@@ -1,0 +1,74 @@
+
+import java.io.*;
+import java.net.*;
+
+public class Examc {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 12345);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))) {
+            
+            // Enter Name
+            System.out.print(in.readLine()); // "Enter your name: "
+            String name = userInput.readLine();
+            out.println(name);
+
+            // Store questions, correct answers & user attempts
+            String[][] results = new String[5][4]; // [question, correct answer, user answer, status]
+            
+            // Answer Questions
+            for (int i = 0; i < 5; i++) {
+                String question = in.readLine(); // Question
+                String optionA = in.readLine();
+                String optionB = in.readLine();
+                String optionC = in.readLine();
+                String optionD = in.readLine();
+                String prompt = in.readLine(); // "Enter your choice (A/B/C/D): "
+
+                System.out.println("\n" + (i + 1) + ". " + question);
+                System.out.println(optionA);
+                System.out.println(optionB);
+                System.out.println(optionC);
+                System.out.println(optionD);
+
+                String answer;
+                while (true) {
+                    System.out.print(prompt);
+                    answer = userInput.readLine().trim().toUpperCase();
+                    if (answer.matches("[ABCD]")) {
+                        break; // Valid input
+                    } else {
+                        System.out.println("Invalid choice! Please enter A, B, C, or D.");
+                    }
+                }
+
+                out.println(answer); // Send answer to server
+
+                // Store question & answer details
+                results[i][0] = question;   // Question
+                results[i][1] = in.readLine(); // Correct Answer
+                results[i][2] = answer;     // User's Answer
+                results[i][3] = answer.equals(results[i][1]) ? "Correct" : "Incorrect";
+            }
+
+            // Display Final Score
+            String finalScore = in.readLine();
+            System.out.println("\n----------------------------------");
+            System.out.println("         Exam Summary");
+            System.out.println("----------------------------------");
+
+            for (int i = 0; i < 5; i++) {
+                System.out.println("Q:"+(i+1)+" " + results[i][0]);
+                System.out.println("    Correct Answer: " + results[i][1]);
+                System.out.println("    Your Answer: " + results[i][2] + " -> " + results[i][3]);
+                System.out.println("----------------------------------");
+            }
+
+            System.out.println(finalScore);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
